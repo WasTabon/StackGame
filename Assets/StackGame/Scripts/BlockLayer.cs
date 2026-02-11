@@ -18,7 +18,19 @@ public class BlockLayer : MonoBehaviour
     private List<Vector3> normals;
 
     private int colorStartIndex;
+    private Outline outline;
 
+    private void Awake()
+    {
+        outline = GetComponent<Outline>();
+        if (outline == null)
+            outline = gameObject.AddComponent<Outline>();
+        outline.OutlineMode = Outline.Mode.OutlineVisible;
+        outline.OutlineColor = new Color(0.4f, 0.8f, 1f, 1f);
+        outline.OutlineWidth = 4f;
+        outline.enabled = false;
+    }
+    
     public void Initialize(int[] newColors, Material material)
     {
         System.Array.Copy(newColors, colorIndices, 8);
@@ -188,17 +200,23 @@ public class BlockLayer : MonoBehaviour
         vertices.Add(tl);
 
         triangles.Add(idx);
-        triangles.Add(idx + 2);
         triangles.Add(idx + 1);
-        triangles.Add(idx);
-        triangles.Add(idx + 3);
         triangles.Add(idx + 2);
+        triangles.Add(idx);
+        triangles.Add(idx + 2);
+        triangles.Add(idx + 3);
 
         for (int i = 0; i < 4; i++)
         {
             colors.Add(color);
             normals.Add(normal);
         }
+    }
+
+    public void SetHighlight(bool on)
+    {
+        Debug.Assert(outline != null, "Outline component missing on " + gameObject.name);
+        outline.enabled = on;
     }
 
     public void UpdateVertexColors()
