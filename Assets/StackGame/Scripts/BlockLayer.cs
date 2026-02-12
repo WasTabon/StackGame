@@ -1,24 +1,12 @@
 using UnityEngine;
-using System.Collections.Generic;
 
 public class BlockLayer : MonoBehaviour
 {
     public int[] colorIndices = new int[8];
-    public float blockWidth = 1f;
-    public float blockHeight = 0.4f;
-    public float blockDepth = 1f;
-    public float stripWidth = 0.03f;
 
-    private Mesh mesh;
-    private MeshFilter meshFilter;
-    private MeshRenderer meshRenderer;
-    private List<Vector3> vertices;
-    private List<int> triangles;
-    private List<Color> colors;
-    private List<Vector3> normals;
-
-    private int colorStartIndex;
+    private int rotationStep = 0;
     private Outline outline;
+    private MeshRenderer[] halfRenderers = new MeshRenderer[8];
 
     private void Awake()
     {
@@ -29,225 +17,158 @@ public class BlockLayer : MonoBehaviour
         outline.OutlineColor = new Color(0.4f, 0.8f, 1f, 1f);
         outline.OutlineWidth = 4f;
         outline.enabled = false;
+
+        CacheRenderers();
     }
-    
-    public void Initialize(int[] newColors, Material material)
+
+    public void Initialize(int[] newColors)
     {
         System.Array.Copy(newColors, colorIndices, 8);
-
-        meshFilter = GetComponent<MeshFilter>();
-        if (meshFilter == null)
-            meshFilter = gameObject.AddComponent<MeshFilter>();
-
-        meshRenderer = GetComponent<MeshRenderer>();
-        if (meshRenderer == null)
-            meshRenderer = gameObject.AddComponent<MeshRenderer>();
-
-        meshRenderer.material = material;
-        GenerateMesh();
+        BuildVisuals();
     }
 
-    public int GetColorIndex(int side, int half)
+    private void BuildVisuals()
     {
-        return colorIndices[side * 2 + half];
-    }
+        for (int i = transform.childCount - 1; i >= 0; i--)
+            DestroyImmediate(transform.GetChild(i).gameObject);
 
-    public void RotateColorsCW()
-    {
-        int[] newColors = new int[8];
-        for (int h = 0; h < 2; h++)
+        float size = 1f;
+        float height = 0.4f;
+        float thick = 0.08f;
+        float gap = 0.02f;
+        float hs = size * 0.5f;
+        float sideOffset = hs - thick * 0.5f;
+
+        float fbHalfW = (size - gap) * 0.5f;
+        float fbShift = (fbHalfW + gap) * 0.5f;
+
+        float lrLen = size - thick * 2f;
+        float lrHalfD = (lrLen - gap) * 0.5f;
+        float lrShift = (lrHalfD + gap) * 0.5f;
+
+        Vector3[] positions =
         {
-            newColors[0 * 2 + h] = colorIndices[3 * 2 + h];
-            newColors[1 * 2 + h] = colorIndices[0 * 2 + h];
-            newColors[2 * 2 + h] = colorIndices[1 * 2 + h];
-            newColors[3 * 2 + h] = colorIndices[2 * 2 + h];
-        }
-        System.Array.Copy(newColors, colorIndices, 8);
-        UpdateVertexColors();
-    }
+            new Vector3(-fbShift, 0f, sideOffset),
+            new Vector3(fbShift, 0f, sideOffset),
 
-    public void RotateColorsCCW()
-    {
-        int[] newColors = new int[8];
-        for (int h = 0; h < 2; h++)
-        {
-            newColors[0 * 2 + h] = colorIndices[1 * 2 + h];
-            newColors[1 * 2 + h] = colorIndices[2 * 2 + h];
-            newColors[2 * 2 + h] = colorIndices[3 * 2 + h];
-            newColors[3 * 2 + h] = colorIndices[0 * 2 + h];
-        }
-        System.Array.Copy(newColors, colorIndices, 8);
-        UpdateVertexColors();
-    }
+            new Vector3(sideOffset, 0f, lrShift),
+            new Vector3(sideOffset, 0f, -lrShift),
 
-    private void GenerateMesh()
-    {
-        mesh = new Mesh();
-        mesh.name = "BlockLayerMesh";
+            new Vector3(fbShift, 0f, -sideOffset),
+            new Vector3(-fbShift, 0f, -sideOffset),
 
-        vertices = new List<Vector3>();
-        triangles = new List<int>();
-        colors = new List<Color>();
-        normals = new List<Vector3>();
-
-        float hw = blockWidth * 0.5f;
-        float hh = blockHeight * 0.5f;
-        float hd = blockDepth * 0.5f;
-        float totalW = blockWidth;
-        float halfW = (totalW - stripWidth) * 0.5f;
-        float height = blockHeight;
-
-        Vector3[] sideOrigins = new Vector3[]
-        {
-            new Vector3(-hw, -hh, hd),
-            new Vector3(hw, -hh, hd),
-            new Vector3(hw, -hh, -hd),
-            new Vector3(-hw, -hh, -hd)
+            new Vector3(-sideOffset, 0f, -lrShift),
+            new Vector3(-sideOffset, 0f, lrShift)
         };
 
-        Vector3[] sideRights = new Vector3[]
+        Vector3[] scales =
         {
-            Vector3.right,
-            Vector3.back,
-            Vector3.left,
-            Vector3.forward
+            new Vector3(fbHalfW, height, thick),
+            new Vector3(fbHalfW, height, thick),
+
+            new Vector3(thick, height, lrHalfD),
+            new Vector3(thick, height, lrHalfD),
+
+            new Vector3(fbHalfW, height, thick),
+            new Vector3(fbHalfW, height, thick),
+
+            new Vector3(thick, height, lrHalfD),
+            new Vector3(thick, height, lrHalfD)
         };
 
-        Vector3[] sideNormals = new Vector3[]
+        string[] names =
         {
-            Vector3.forward,
-            Vector3.right,
-            Vector3.back,
-            Vector3.left
+            "Front_L", "Front_R",
+            "Right_L", "Right_R",
+            "Back_L", "Back_R",
+            "Left_L", "Left_R"
         };
 
-        colorStartIndex = 0;
-
-        for (int side = 0; side < 4; side++)
+        for (int i = 0; i < 8; i++)
         {
-            Vector3 origin = sideOrigins[side];
-            Vector3 right = sideRights[side];
-            Vector3 normal = sideNormals[side];
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.name = names[i];
+            cube.transform.SetParent(transform, false);
+            cube.transform.localPosition = positions[i];
+            cube.transform.localScale = scales[i];
 
-            Color leftColor = GameColors.FromIndex(colorIndices[side * 2 + 0]);
-            Color rightColor = GameColors.FromIndex(colorIndices[side * 2 + 1]);
-
-            if (side == 0)
-                colorStartIndex = vertices.Count;
-
-            AddQuad(origin, right, halfW, height, normal, leftColor);
-            AddQuad(origin + right * halfW, right, stripWidth, height, normal, GameColors.DarkStrip);
-            AddQuad(origin + right * (halfW + stripWidth), right, halfW, height, normal, rightColor);
+            MeshRenderer mr = cube.GetComponent<MeshRenderer>();
+            mr.material = new Material(Shader.Find("Standard"));
+            mr.material.color = GameColors.FromIndex(colorIndices[i]);
+            halfRenderers[i] = mr;
         }
 
-        AddQuad(
-            new Vector3(-hw, hh, -hd),
-            Vector3.right, totalW,
-            new Vector3(-hw, hh, hd),
-            Vector3.up, GameColors.DarkBase
-        );
-
-        AddQuad(
-            new Vector3(-hw, -hh, hd),
-            Vector3.right, totalW,
-            new Vector3(-hw, -hh, -hd),
-            Vector3.down, GameColors.DarkBase
-        );
-
-        mesh.SetVertices(vertices);
-        mesh.SetTriangles(triangles, 0);
-        mesh.SetColors(colors);
-        mesh.SetNormals(normals);
-
-        meshFilter.mesh = mesh;
+        GameObject fill = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        fill.name = "Fill";
+        fill.transform.SetParent(transform, false);
+        fill.transform.localPosition = Vector3.zero;
+        float innerSize = size - thick * 2f - 0.002f;
+        fill.transform.localScale = new Vector3(innerSize, height, innerSize);
+        MeshRenderer fillMr = fill.GetComponent<MeshRenderer>();
+        fillMr.material = new Material(Shader.Find("Standard"));
+        fillMr.material.color = GameColors.DarkBase;
     }
 
-    private void AddQuad(Vector3 bottomLeft, Vector3 rightDir, float width, float height, Vector3 normal, Color color)
+    private void CacheRenderers()
     {
-        int idx = vertices.Count;
-
-        vertices.Add(bottomLeft);
-        vertices.Add(bottomLeft + rightDir * width);
-        vertices.Add(bottomLeft + rightDir * width + Vector3.up * height);
-        vertices.Add(bottomLeft + Vector3.up * height);
-
-        triangles.Add(idx);
-        triangles.Add(idx + 1);
-        triangles.Add(idx + 2);
-        triangles.Add(idx);
-        triangles.Add(idx + 2);
-        triangles.Add(idx + 3);
-
-        for (int i = 0; i < 4; i++)
+        string[] names =
         {
-            colors.Add(color);
-            normals.Add(normal);
+            "Front_L", "Front_R",
+            "Right_L", "Right_R",
+            "Back_L", "Back_R",
+            "Left_L", "Left_R"
+        };
+        for (int i = 0; i < 8; i++)
+        {
+            Transform child = transform.Find(names[i]);
+            if (child != null)
+                halfRenderers[i] = child.GetComponent<MeshRenderer>();
         }
     }
 
-    private void AddQuad(Vector3 corner1, Vector3 rightDir, float width, Vector3 corner2, Vector3 normal, Color color)
+    public void ApplyRotation(int direction)
     {
-        int idx = vertices.Count;
+        if (direction > 0)
+            rotationStep = (rotationStep + 1) % 4;
+        else
+            rotationStep = (rotationStep + 3) % 4;
+    }
 
-        Vector3 bl = corner1;
-        Vector3 br = corner1 + rightDir * width;
-        Vector3 tl = corner2;
-        Vector3 tr = corner2 + rightDir * width;
-
-        vertices.Add(bl);
-        vertices.Add(br);
-        vertices.Add(tr);
-        vertices.Add(tl);
-
-        triangles.Add(idx);
-        triangles.Add(idx + 1);
-        triangles.Add(idx + 2);
-        triangles.Add(idx);
-        triangles.Add(idx + 2);
-        triangles.Add(idx + 3);
-
-        for (int i = 0; i < 4; i++)
-        {
-            colors.Add(color);
-            normals.Add(normal);
-        }
+    public int GetColorIndex(int worldSide, int half)
+    {
+        float angle = transform.localEulerAngles.y;
+        int steps = Mathf.RoundToInt(angle / 90f) % 4;
+        if (steps < 0) steps += 4;
+        int localSide = (worldSide + 4 - steps) % 4;
+        return colorIndices[localSide * 2 + half];
     }
 
     public void SetHighlight(bool on)
     {
-        Debug.Assert(outline != null, "Outline component missing on " + gameObject.name);
+        Debug.Assert(outline != null, "Outline missing on " + gameObject.name);
         outline.enabled = on;
     }
 
-    public void UpdateVertexColors()
+    public void FlashWhite(float duration)
     {
-        if (mesh == null) return;
-
-        Color[] meshColors = mesh.colors;
-
-        float totalW = blockWidth;
-        float halfW = (totalW - stripWidth) * 0.5f;
-
-        int idx = colorStartIndex;
-
-        for (int side = 0; side < 4; side++)
+        for (int i = 0; i < 8; i++)
         {
-            Color leftColor = GameColors.FromIndex(colorIndices[side * 2 + 0]);
-            Color rightColor = GameColors.FromIndex(colorIndices[side * 2 + 1]);
-
-            for (int v = 0; v < 4; v++)
-                meshColors[idx + v] = leftColor;
-            idx += 4;
-
-            for (int v = 0; v < 4; v++)
-                meshColors[idx + v] = GameColors.DarkStrip;
-            idx += 4;
-
-            for (int v = 0; v < 4; v++)
-                meshColors[idx + v] = rightColor;
-            idx += 4;
+            if (halfRenderers[i] != null)
+                halfRenderers[i].material.color = Color.white;
         }
+        DG.Tweening.DOVirtual.DelayedCall(duration * 0.5f, () =>
+        {
+            if (this != null)
+                RestoreColors();
+        });
+    }
 
-        mesh.colors = meshColors;
+    private void RestoreColors()
+    {
+        for (int i = 0; i < 8; i++)
+        {
+            if (halfRenderers[i] != null)
+                halfRenderers[i].material.color = GameColors.FromIndex(colorIndices[i]);
+        }
     }
 }

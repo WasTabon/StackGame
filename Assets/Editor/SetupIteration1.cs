@@ -6,119 +6,75 @@ public class SetupIteration1 : Editor
     [MenuItem("STACK/Setup Gameplay Scene (Iteration 1)")]
     public static void Setup()
     {
-        Material blockMat = SetupMaterial();
-        Tower tower = SetupTower(blockMat);
+        Tower tower = SetupTower();
         tower.SpawnInitialLayers();
-        CameraController cam = SetupCamera(tower);
-        cam.FocusOnTowerCenter();
+
+        SetupCamera(tower);
         SetupLighting();
 
-        Debug.Log("[Iteration 1] Gameplay scene setup complete.");
+        Debug.Log("[Iteration 1] Gameplay scene setup complete. " + tower.layers.Count + " layers spawned.");
     }
 
-    private static Material SetupMaterial()
-    {
-        string matPath = "Assets/STACK/Materials/BlockVertexColor.mat";
-
-        if (!AssetDatabase.IsValidFolder("Assets/STACK/Materials"))
-            AssetDatabase.CreateFolder("Assets/STACK", "Materials");
-
-        Material mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
-        if (mat == null)
-        {
-            Shader shader = Shader.Find("STACK/VertexColor");
-            Debug.Assert(shader != null, "STACK/VertexColor shader not found! Make sure the shader file exists.");
-            mat = new Material(shader);
-            mat.name = "BlockVertexColor";
-            AssetDatabase.CreateAsset(mat, matPath);
-            AssetDatabase.SaveAssets();
-        }
-
-        return mat;
-    }
-
-    private static Tower SetupTower(Material blockMat)
+    private static Tower SetupTower()
     {
         Tower tower = Object.FindFirstObjectByType<Tower>();
-
-        if (tower == null)
-        {
-            GameObject towerObj = new GameObject("Tower");
-            towerObj.transform.position = Vector3.zero;
-            tower = towerObj.AddComponent<Tower>();
-            Undo.RegisterCreatedObjectUndo(towerObj, "Create Tower");
-        }
-        else
+        if (tower != null)
         {
             tower.ClearLayers();
         }
-
-        tower.blockMaterial = blockMat;
-        tower.initialLayerCount = 6;
-        tower.layerSpacing = 0.5f;
+        else
+        {
+            GameObject obj = new GameObject("Tower");
+            tower = obj.AddComponent<Tower>();
+            Undo.RegisterCreatedObjectUndo(obj, "Create Tower");
+        }
 
         EditorUtility.SetDirty(tower);
         return tower;
     }
 
-    private static CameraController SetupCamera(Tower tower)
+    private static void SetupCamera(Tower tower)
     {
-        Camera mainCam = Camera.main;
-        if (mainCam == null)
+        Camera cam = Camera.main;
+        if (cam == null)
         {
             GameObject camObj = new GameObject("Main Camera");
             camObj.tag = "MainCamera";
-            mainCam = camObj.AddComponent<Camera>();
+            cam = camObj.AddComponent<Camera>();
             Undo.RegisterCreatedObjectUndo(camObj, "Create Camera");
         }
 
-        mainCam.clearFlags = CameraClearFlags.SolidColor;
-        mainCam.backgroundColor = GameColors.Background;
-        mainCam.fieldOfView = 45f;
+        cam.clearFlags = CameraClearFlags.SolidColor;
+        cam.backgroundColor = GameColors.Background;
+        cam.fieldOfView = 40f;
 
-        CameraController controller = mainCam.GetComponent<CameraController>();
-        if (controller == null)
-            controller = mainCam.gameObject.AddComponent<CameraController>();
+        float midY = tower.GetTowerHeight() * 0.5f;
+        cam.transform.position = new Vector3(2f, midY + 0.5f, 2f);
+        cam.transform.LookAt(new Vector3(0f, midY, 0f));
 
-        controller.tower = tower;
-        controller.distance = 4.5f;
-        controller.heightOffset = 0.3f;
-        controller.pitchAngle = 25f;
-        controller.yawAngle = 35f;
+        CameraController cc = cam.GetComponent<CameraController>();
+        if (cc == null)
+            cc = cam.gameObject.AddComponent<CameraController>();
+        cc.tower = tower;
 
-        EditorUtility.SetDirty(mainCam.gameObject);
-        return controller;
+        EditorUtility.SetDirty(cam);
+        EditorUtility.SetDirty(cc);
     }
 
     private static void SetupLighting()
     {
-        Light dirLight = null;
         Light[] lights = Object.FindObjectsByType<Light>(FindObjectsSortMode.None);
-        foreach (var l in lights)
-        {
-            if (l.type == LightType.Directional)
-            {
-                dirLight = l;
-                break;
-            }
-        }
+        foreach (Light l in lights)
+            DestroyImmediate(l.gameObject);
 
-        if (dirLight == null)
-        {
-            GameObject lightObj = new GameObject("Directional Light");
-            dirLight = lightObj.AddComponent<Light>();
-            dirLight.type = LightType.Directional;
-            Undo.RegisterCreatedObjectUndo(lightObj, "Create Directional Light");
-        }
+        GameObject lightObj = new GameObject("Directional Light");
+        Light light = lightObj.AddComponent<Light>();
+        light.type = LightType.Directional;
+        light.color = new Color(0.9f, 0.9f, 1f, 1f);
+        light.intensity = 1.0f;
+        lightObj.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
 
-        dirLight.transform.rotation = Quaternion.Euler(45f, -30f, 0f);
-        dirLight.color = new Color(0.7f, 0.75f, 0.9f, 1f);
-        dirLight.intensity = 0.8f;
-        dirLight.shadows = LightShadows.Soft;
-
-        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-        RenderSettings.ambientLight = new Color(0.12f, 0.13f, 0.22f, 1f);
-
-        EditorUtility.SetDirty(dirLight.gameObject);
+        Undo.RegisterCreatedObjectUndo(lightObj, "Create Light");
+        EditorUtility.SetDirty(light);
     }
 }

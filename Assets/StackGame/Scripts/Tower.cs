@@ -5,7 +5,6 @@ public class Tower : MonoBehaviour
 {
     public int initialLayerCount = 6;
     public float layerSpacing = 0.5f;
-    public Material blockMaterial;
 
     [HideInInspector]
     public List<BlockLayer> layers = new List<BlockLayer>();
@@ -27,7 +26,7 @@ public class Tower : MonoBehaviour
 
         BlockLayer layer = obj.AddComponent<BlockLayer>();
         int[] randomColors = GenerateRandomColors();
-        layer.Initialize(randomColors, blockMaterial);
+        layer.Initialize(randomColors);
         layers.Add(layer);
         return layer;
     }
@@ -46,6 +45,14 @@ public class Tower : MonoBehaviour
     public float GetTowerHeight()
     {
         return layers.Count * layerSpacing;
+    }
+
+    public void RemoveLayerAt(int index)
+    {
+        Debug.Assert(index >= 0 && index < layers.Count, "RemoveLayerAt: index out of range: " + index);
+        BlockLayer layer = layers[index];
+        layers.RemoveAt(index);
+        Destroy(layer.gameObject);
     }
 
     public void ClearLayers()
