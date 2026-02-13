@@ -5,6 +5,7 @@ public class Tower : MonoBehaviour
 {
     public int initialLayerCount = 6;
     public float layerSpacing = 0.5f;
+    public LayerSpawner spawner;
 
     [HideInInspector]
     public List<BlockLayer> layers = new List<BlockLayer>();
@@ -25,8 +26,8 @@ public class Tower : MonoBehaviour
         obj.transform.localPosition = new Vector3(0f, index * layerSpacing, 0f);
 
         BlockLayer layer = obj.AddComponent<BlockLayer>();
-        int[] randomColors = GenerateRandomColors();
-        layer.Initialize(randomColors);
+        int[] colors = spawner != null ? spawner.GenerateSmartColors() : GenerateRandomColors();
+        layer.Initialize(colors);
         layers.Add(layer);
         return layer;
     }
@@ -69,9 +70,7 @@ public class Tower : MonoBehaviour
     {
         int[] c = new int[8];
         for (int i = 0; i < 8; i++)
-        {
             c[i] = GameColors.RandomIndex();
-        }
         return c;
     }
 }

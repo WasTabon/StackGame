@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 using DG.Tweening;
 
 public class StackChecker : MonoBehaviour
@@ -21,6 +22,8 @@ public class StackChecker : MonoBehaviour
 
     public bool IsProcessing => isProcessing;
 
+    public event Action<int, int> OnLayersRemoved;
+
     public void CheckAndResolve()
     {
         if (isProcessing) return;
@@ -32,14 +35,17 @@ public class StackChecker : MonoBehaviour
         isProcessing = true;
         inputController.SetInputLocked(true);
 
+        int chainStep = 0;
         bool hadMatch = true;
         while (hadMatch)
         {
             List<int> toRemove = FindMatchingPairs();
             if (toRemove.Count > 0)
             {
+                chainStep++;
                 hadMatch = true;
                 yield return StartCoroutine(RemoveLayersAnimated(toRemove));
+                OnLayersRemoved?.Invoke(toRemove.Count, chainStep);
                 yield return new WaitForSeconds(cascadeDelay);
             }
             else

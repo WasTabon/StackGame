@@ -4,27 +4,34 @@ public class BlockLayer : MonoBehaviour
 {
     public int[] colorIndices = new int[8];
 
-    private int rotationStep = 0;
     private Outline outline;
     private MeshRenderer[] halfRenderers = new MeshRenderer[8];
 
     private void Awake()
     {
-        outline = GetComponent<Outline>();
-        if (outline == null)
-            outline = gameObject.AddComponent<Outline>();
-        outline.OutlineMode = Outline.Mode.OutlineVisible;
-        outline.OutlineColor = new Color(0.4f, 0.8f, 1f, 1f);
-        outline.OutlineWidth = 4f;
-        outline.enabled = false;
-
         CacheRenderers();
+        if (transform.childCount > 0)
+            SetupOutline();
     }
 
     public void Initialize(int[] newColors)
     {
         System.Array.Copy(newColors, colorIndices, 8);
         BuildVisuals();
+        SetupOutline();
+    }
+
+    private void SetupOutline()
+    {
+        Outline existing = GetComponent<Outline>();
+        if (existing != null)
+            DestroyImmediate(existing);
+
+        outline = gameObject.AddComponent<Outline>();
+        outline.OutlineMode = Outline.Mode.OutlineVisible;
+        outline.OutlineColor = new Color(0.4f, 0.8f, 1f, 1f);
+        outline.OutlineWidth = 4f;
+        outline.enabled = false;
     }
 
     private void BuildVisuals()
@@ -126,14 +133,6 @@ public class BlockLayer : MonoBehaviour
         }
     }
 
-    public void ApplyRotation(int direction)
-    {
-        if (direction > 0)
-            rotationStep = (rotationStep + 1) % 4;
-        else
-            rotationStep = (rotationStep + 3) % 4;
-    }
-
     public int GetColorIndex(int worldSide, int half)
     {
         float angle = transform.localEulerAngles.y;
@@ -141,6 +140,11 @@ public class BlockLayer : MonoBehaviour
         if (steps < 0) steps += 4;
         int localSide = (worldSide + 4 - steps) % 4;
         return colorIndices[localSide * 2 + half];
+    }
+
+    public int GetRawColorIndex(int side, int half)
+    {
+        return colorIndices[side * 2 + half];
     }
 
     public void SetHighlight(bool on)

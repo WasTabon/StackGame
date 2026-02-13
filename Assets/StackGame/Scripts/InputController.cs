@@ -67,8 +67,6 @@ public class InputController : MonoBehaviour
             .SetEase(Ease.OutBack, 1.2f)
             .OnComplete(() =>
             {
-                //layer.ApplyRotation(direction);
-
                 float y = layer.transform.localEulerAngles.y;
                 y = Mathf.Round(y / 90f) * 90f;
                 layer.transform.localEulerAngles = new Vector3(0f, y, 0f);
