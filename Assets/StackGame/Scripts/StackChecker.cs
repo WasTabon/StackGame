@@ -22,7 +22,8 @@ public class StackChecker : MonoBehaviour
 
     public bool IsProcessing => isProcessing;
 
-    public event Action<int, int> OnLayersRemoved;
+    public event Action<int, int, Vector3> OnLayersRemoved;
+    public event Action<BlockLayer> OnLayerRemoving;
 
     public void CheckAndResolve()
     {
@@ -44,8 +45,14 @@ public class StackChecker : MonoBehaviour
             {
                 chainStep++;
                 hadMatch = true;
+
+                Vector3 avgPos = Vector3.zero;
+                foreach (int idx in toRemove)
+                    avgPos += tower.layers[idx].transform.position;
+                avgPos /= toRemove.Count;
+
                 yield return StartCoroutine(RemoveLayersAnimated(toRemove));
-                OnLayersRemoved?.Invoke(toRemove.Count, chainStep);
+                OnLayersRemoved?.Invoke(toRemove.Count, chainStep, avgPos);
                 yield return new WaitForSeconds(cascadeDelay);
             }
             else
@@ -99,6 +106,7 @@ public class StackChecker : MonoBehaviour
         foreach (var layer in layersToRemove)
         {
             layer.SetHighlight(false);
+            OnLayerRemoving?.Invoke(layer);
             layer.FlashWhite(flashDuration);
         }
         yield return new WaitForSeconds(flashDuration);

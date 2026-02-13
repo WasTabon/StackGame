@@ -8,6 +8,9 @@ public class GameManager : MonoBehaviour
     public StackChecker stackChecker;
     public InputController inputController;
     public GameOverUI gameOverUI;
+    public ScorePopup scorePopup;
+    public ParticleSpawner particleSpawner;
+    public SpawnTimerUI spawnTimerUI;
 
     [Header("Spawn Settings")]
     public float spawnInterval = 8f;
@@ -25,12 +28,18 @@ public class GameManager : MonoBehaviour
         spawnTimer = spawnInterval;
         UpdateScoreUI();
         stackChecker.OnLayersRemoved += OnLayersRemoved;
+        stackChecker.OnLayerRemoving += OnLayerRemoving;
+        if (spawnTimerUI != null)
+            spawnTimerUI.ResetTimer();
     }
 
     private void OnDestroy()
     {
         if (stackChecker != null)
+        {
             stackChecker.OnLayersRemoved -= OnLayersRemoved;
+            stackChecker.OnLayerRemoving -= OnLayerRemoving;
+        }
     }
 
     private void Update()
@@ -39,10 +48,19 @@ public class GameManager : MonoBehaviour
         if (stackChecker.IsProcessing) return;
 
         spawnTimer -= Time.deltaTime;
+
+        if (spawnTimerUI != null)
+        {
+            float normalized = 1f - (spawnTimer / spawnInterval);
+            spawnTimerUI.UpdateTimer(normalized);
+        }
+
         if (spawnTimer <= 0f)
         {
             spawnTimer = spawnInterval;
             SpawnNewLayer();
+            if (spawnTimerUI != null)
+                spawnTimerUI.ResetTimer();
         }
     }
 
@@ -62,12 +80,25 @@ public class GameManager : MonoBehaviour
         CheckGameOver();
     }
 
-    private void OnLayersRemoved(int removedCount, int chainStep)
+    private void OnLayerRemoving(BlockLayer layer)
+    {
+        if (particleSpawner != null)
+            particleSpawner.SpawnForLayer(layer);
+    }
+
+    private void OnLayersRemoved(int removedCount, int chainStep, Vector3 avgPosition)
     {
         int chainBonus = chainStep > 1 ? chainStep * 2 : 1;
         int points = removedCount * 100 * chainBonus;
         score += points;
         UpdateScoreUI();
+
+        if (scorePopup != null)
+            scorePopup.ShowAt(avgPosition, points, chainStep);
+
+        spawnTimer = spawnInterval;
+        if (spawnTimerUI != null)
+            spawnTimerUI.ResetTimer();
     }
 
     private void CheckGameOver()
