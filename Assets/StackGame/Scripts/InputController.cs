@@ -7,6 +7,7 @@ public class InputController : MonoBehaviour
     public Tower tower;
     public CameraController cameraController;
     public StackChecker stackChecker;
+    public BonusManager bonusManager;
     public Text layerIndicatorText;
 
     private int selectedIndex = 0;
@@ -34,6 +35,13 @@ public class InputController : MonoBehaviour
             RotateSelected(1);
         if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space))
             OnConfirmPressed();
+        if (Input.GetKeyDown(KeyCode.Escape))
+            OnCancelPressed();
+    }
+
+    public bool IsLocked()
+    {
+        return inputLocked;
     }
 
     public void SetInputLocked(bool locked)
@@ -78,8 +86,18 @@ public class InputController : MonoBehaviour
     public void OnConfirmPressed()
     {
         if (inputLocked) return;
+
+        if (bonusManager != null && bonusManager.HandleConfirm(selectedIndex))
+            return;
+
         Debug.Assert(stackChecker != null, "StackChecker not assigned on InputController!");
         stackChecker.CheckAndResolve();
+    }
+
+    public void OnCancelPressed()
+    {
+        if (bonusManager != null)
+            bonusManager.CancelMode();
     }
 
     public void RefreshSelection()
@@ -88,6 +106,11 @@ public class InputController : MonoBehaviour
 
         selectedIndex = Mathf.Clamp(selectedIndex, 0, tower.layers.Count - 1);
         SelectLayer(selectedIndex);
+    }
+
+    public int GetSelectedIndex()
+    {
+        return selectedIndex;
     }
 
     private void SelectLayer(int index)
