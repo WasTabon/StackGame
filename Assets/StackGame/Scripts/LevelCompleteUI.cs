@@ -2,12 +2,15 @@ using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 
-public class GameOverUI : MonoBehaviour
+public class LevelCompleteUI : MonoBehaviour
 {
     public CanvasGroup panelGroup;
-    public Text finalScoreText;
     public RectTransform panelRect;
-    public Text highScoreText;
+    public Text titleText;
+    public Text scoreText;
+    public GameObject nextButton;
+    public GameObject menuButton;
+    public GameObject retryButton;
 
     private void Awake()
     {
@@ -16,18 +19,12 @@ public class GameOverUI : MonoBehaviour
         panelGroup.blocksRaycasts = false;
     }
 
-    public void Show(int score)
+    public void Show(int score, bool hasNextLevel)
     {
-        finalScoreText.text = "SCORE\n" + score;
+        titleText.text = "LEVEL COMPLETE!";
+        scoreText.text = "SCORE\n" + score;
 
-        if (highScoreText != null)
-        {
-            int best = PlayerPrefs.GetInt("EndlessHighScore", 0);
-            if (best > 0)
-                highScoreText.text = "BEST: " + best;
-            else
-                highScoreText.text = "";
-        }
+        nextButton.SetActive(hasNextLevel);
 
         panelGroup.interactable = true;
         panelGroup.blocksRaycasts = true;

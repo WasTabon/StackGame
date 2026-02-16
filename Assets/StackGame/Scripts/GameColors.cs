@@ -15,9 +15,16 @@ public static class GameColors
     public static readonly Color DarkStrip = new Color(0.03f, 0.04f, 0.10f, 1f);
     public static readonly Color Background = new Color(0.04f, 0.05f, 0.12f, 1f);
 
+    private static int activeColorCount = 5;
+
+    public static void SetActiveColorCount(int count)
+    {
+        activeColorCount = Mathf.Clamp(count, 2, Palette.Length);
+    }
+
     public static int RandomIndex()
     {
-        return Random.Range(0, Palette.Length);
+        return Random.Range(0, activeColorCount);
     }
 
     public static Color FromIndex(int index)

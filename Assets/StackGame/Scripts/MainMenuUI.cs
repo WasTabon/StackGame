@@ -9,10 +9,13 @@ public class MainMenuUI : MonoBehaviour
     public RectTransform endlessButtonRect;
     public CanvasGroup levelsCanvasGroup;
     public CanvasGroup endlessCanvasGroup;
+    public LevelSelectUI levelSelectUI;
+    public Text highScoreText;
 
     private void Start()
     {
         AnimateEntrance();
+        UpdateHighScore();
     }
 
     private void AnimateEntrance()
@@ -33,10 +36,19 @@ public class MainMenuUI : MonoBehaviour
         endlessButtonRect.DOAnchorPos(endlessStart, 0.5f).SetEase(Ease.OutCubic).SetDelay(0.65f);
     }
 
+    private void UpdateHighScore()
+    {
+        if (highScoreText != null)
+        {
+            int best = PlayerPrefs.GetInt("EndlessHighScore", 0);
+            highScoreText.text = best > 0 ? "BEST: " + best : "";
+        }
+    }
+
     public void OnLevelsPressed()
     {
-        Debug.Assert(SceneLoader.Instance != null, "SceneLoader not found!");
-        SceneLoader.Instance.LoadGameplay(SceneLoader.GameMode.Levels);
+        if (levelSelectUI != null)
+            levelSelectUI.Show();
     }
 
     public void OnEndlessPressed()

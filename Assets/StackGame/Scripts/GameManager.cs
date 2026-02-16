@@ -8,9 +8,12 @@ public class GameManager : MonoBehaviour
     public StackChecker stackChecker;
     public InputController inputController;
     public GameOverUI gameOverUI;
+    public LevelCompleteUI levelCompleteUI;
     public ScorePopup scorePopup;
     public ParticleSpawner particleSpawner;
     public SpawnTimerUI spawnTimerUI;
+    public LevelManager levelManager;
+    public EndlessManager endlessManager;
 
     [Header("Spawn Settings")]
     public float spawnInterval = 8f;
@@ -25,12 +28,31 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        spawnTimer = spawnInterval;
-        UpdateScoreUI();
         stackChecker.OnLayersRemoved += OnLayersRemoved;
         stackChecker.OnLayerRemoving += OnLayerRemoving;
+
+        if (SceneLoader.Instance != null && SceneLoader.Instance.CurrentMode == SceneLoader.GameMode.Levels)
+        {
+            if (levelManager != null)
+            {
+                int levelIdx = PlayerPrefs.GetInt("SelectedLevel", 0);
+                levelManager.StartLevel(levelIdx);
+                tower.SpawnInitialLayers();
+            }
+        }
+        else
+        {
+            if (endlessManager != null)
+                endlessManager.StartEndless();
+            tower.SpawnInitialLayers();
+        }
+
+        spawnTimer = spawnInterval;
+        UpdateScoreUI();
         if (spawnTimerUI != null)
             spawnTimerUI.ResetTimer();
+
+        inputController.RefreshSelection();
     }
 
     private void OnDestroy()
@@ -46,6 +68,7 @@ public class GameManager : MonoBehaviour
     {
         if (gameOver) return;
         if (stackChecker.IsProcessing) return;
+        if (levelManager != null && levelManager.IsLevelComplete) return;
 
         spawnTimer -= Time.deltaTime;
 
@@ -99,6 +122,12 @@ public class GameManager : MonoBehaviour
         spawnTimer = spawnInterval;
         if (spawnTimerUI != null)
             spawnTimerUI.ResetTimer();
+
+        if (levelManager != null && levelManager.IsActive)
+        {
+            levelManager.OnLayersRemoved(removedCount, chainStep);
+            levelManager.OnScoreChanged(score);
+        }
     }
 
     private void CheckGameOver()
@@ -107,8 +136,24 @@ public class GameManager : MonoBehaviour
         {
             gameOver = true;
             inputController.SetInputLocked(true);
+
+            if (endlessManager != null && endlessManager.IsActive)
+                endlessManager.SaveHighScore(score);
+
             gameOverUI.Show(score);
         }
+    }
+
+    public int GetScore()
+    {
+        return score;
+    }
+
+    public void ShowLevelComplete(bool hasNext)
+    {
+        inputController.SetInputLocked(true);
+        if (levelCompleteUI != null)
+            levelCompleteUI.Show(score, hasNext);
     }
 
     private void UpdateScoreUI()
@@ -125,5 +170,16 @@ public class GameManager : MonoBehaviour
     public void GoToMenu()
     {
         SceneLoader.Instance.LoadMainMenu();
+    }
+
+    public void NextLevel()
+    {
+        if (levelManager != null)
+        {
+            int next = levelManager.GetCurrentLevelIndex() + 1;
+            PlayerPrefs.SetInt("SelectedLevel", next);
+            PlayerPrefs.Save();
+        }
+        SceneLoader.Instance.LoadGameplay(SceneLoader.GameMode.Levels);
     }
 }
