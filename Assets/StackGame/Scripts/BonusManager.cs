@@ -48,6 +48,7 @@ public class BonusManager : MonoBehaviour
     private void Start()
     {
         stackChecker.OnLayersRemoved += OnLayersRemoved;
+        ClaimPendingBonuses();
         UpdateAllUI();
     }
 
@@ -55,6 +56,19 @@ public class BonusManager : MonoBehaviour
     {
         if (stackChecker != null)
             stackChecker.OnLayersRemoved -= OnLayersRemoved;
+    }
+
+    private void ClaimPendingBonuses()
+    {
+        int pending = PlayerPrefs.GetInt("PendingBonuses", 0);
+        if (pending > 0)
+        {
+            swapCount += pending;
+            destroyCount += pending;
+            shuffleCount += pending;
+            PlayerPrefs.SetInt("PendingBonuses", 0);
+            PlayerPrefs.Save();
+        }
     }
 
     private void OnLayersRemoved(int count, int chainStep, Vector3 pos)
@@ -74,6 +88,19 @@ public class BonusManager : MonoBehaviour
             destroyCount++;
             ShowBonusReward(destroyButton);
         }
+        UpdateAllUI();
+    }
+
+    public void AddBonuses(int swap, int destroy, int shuffle)
+    {
+        swapCount += swap;
+        destroyCount += destroy;
+        shuffleCount += shuffle;
+
+        if (swap > 0) ShowBonusReward(swapButton);
+        if (destroy > 0) ShowBonusReward(destroyButton);
+        if (shuffle > 0) ShowBonusReward(shuffleButton);
+
         UpdateAllUI();
     }
 
