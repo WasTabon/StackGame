@@ -14,6 +14,8 @@ public class GameManager : MonoBehaviour
     public SpawnTimerUI spawnTimerUI;
     public LevelManager levelManager;
     public EndlessManager endlessManager;
+    public ScreenShake screenShake;
+    public ScoreAnimator scoreAnimator;
 
     [Header("Spawn Settings")]
     public float spawnInterval = 8f;
@@ -99,6 +101,9 @@ public class GameManager : MonoBehaviour
         seq.Join(newLayer.transform.DOLocalMoveY(targetY, 0.4f).SetEase(Ease.OutBounce));
         seq.Join(newLayer.transform.DOScale(Vector3.one, 0.3f).SetEase(Ease.OutBack));
 
+        if (SFXManager.Instance != null)
+            SFXManager.Instance.PlaySpawn();
+
         inputController.RefreshSelection();
         CheckGameOver();
     }
@@ -118,6 +123,17 @@ public class GameManager : MonoBehaviour
 
         if (scorePopup != null)
             scorePopup.ShowAt(avgPosition, points, chainStep);
+
+        if (screenShake != null)
+            screenShake.ShakeForChain(chainStep);
+
+        if (SFXManager.Instance != null)
+        {
+            if (chainStep > 1)
+                SFXManager.Instance.PlayChain(chainStep);
+            else
+                SFXManager.Instance.PlayMatch();
+        }
 
         spawnTimer = spawnInterval;
         if (spawnTimerUI != null)
@@ -140,6 +156,9 @@ public class GameManager : MonoBehaviour
             if (endlessManager != null && endlessManager.IsActive)
                 endlessManager.SaveHighScore(score);
 
+            if (SFXManager.Instance != null)
+                SFXManager.Instance.PlayGameOver();
+
             gameOverUI.Show(score);
         }
     }
@@ -152,13 +171,19 @@ public class GameManager : MonoBehaviour
     public void ShowLevelComplete(bool hasNext)
     {
         inputController.SetInputLocked(true);
+
+        if (SFXManager.Instance != null)
+            SFXManager.Instance.PlayLevelComplete();
+
         if (levelCompleteUI != null)
             levelCompleteUI.Show(score, hasNext);
     }
 
     private void UpdateScoreUI()
     {
-        if (scoreText != null)
+        if (scoreAnimator != null)
+            scoreAnimator.SetScore(score);
+        else if (scoreText != null)
             scoreText.text = score.ToString();
     }
 

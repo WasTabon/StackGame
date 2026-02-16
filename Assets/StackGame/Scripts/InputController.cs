@@ -58,7 +58,11 @@ public class InputController : MonoBehaviour
         newIndex = Mathf.Clamp(newIndex, 0, tower.layers.Count - 1);
 
         if (newIndex != selectedIndex)
+        {
+            if (SFXManager.Instance != null)
+                SFXManager.Instance.PlaySelect();
             SelectLayer(newIndex);
+        }
     }
 
     public void RotateSelected(int direction)
@@ -68,6 +72,9 @@ public class InputController : MonoBehaviour
 
         BlockLayer layer = tower.layers[selectedIndex];
         isRotating = true;
+
+        if (SFXManager.Instance != null)
+            SFXManager.Instance.PlayRotate();
 
         float targetAngle = direction > 0 ? -90f : 90f;
 
@@ -88,7 +95,14 @@ public class InputController : MonoBehaviour
         if (inputLocked) return;
 
         if (bonusManager != null && bonusManager.HandleConfirm(selectedIndex))
+        {
+            if (SFXManager.Instance != null)
+                SFXManager.Instance.PlayBonus();
             return;
+        }
+
+        if (SFXManager.Instance != null)
+            SFXManager.Instance.PlayConfirm();
 
         Debug.Assert(stackChecker != null, "StackChecker not assigned on InputController!");
         stackChecker.CheckAndResolve();
@@ -96,8 +110,12 @@ public class InputController : MonoBehaviour
 
     public void OnCancelPressed()
     {
-        if (bonusManager != null)
+        if (bonusManager != null && bonusManager.CurrentMode != BonusManager.BonusMode.None)
+        {
+            if (SFXManager.Instance != null)
+                SFXManager.Instance.PlayCancel();
             bonusManager.CancelMode();
+        }
     }
 
     public void RefreshSelection()
