@@ -60,9 +60,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71c1514a6bd24e1e882cebbe1904ce04, type: 3}
   m_Name: Onest-VariableFont_wght SDF
   m_EditorClassIdentifier: 
-  hashCode: 0
+  hashCode: -1486229703
   material: {fileID: 2942031924070206532}
-  materialHashCode: 0
+  materialHashCode: -157941895
   m_Version: 1.1.0
   m_SourceFontFileGUID: dddc7853405c97b4faa1bc43741a77ea
   m_SourceFontFile_EditorRef: {fileID: 12800000, guid: dddc7853405c97b4faa1bc43741a77ea, type: 3}
@@ -2782,9 +2782,9 @@ Material:
     - _OutlineWidth: 0
     - _PerspectiveFilter: 0.875
     - _Reflectivity: 10
-    - _ScaleRatioA: 1
-    - _ScaleRatioB: 1
-    - _ScaleRatioC: 1
+    - _ScaleRatioA: 0.8333333
+    - _ScaleRatioB: 0.6770833
+    - _ScaleRatioC: 0.6770833
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0

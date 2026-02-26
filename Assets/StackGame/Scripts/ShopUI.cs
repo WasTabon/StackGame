@@ -6,9 +6,7 @@ public class ShopUI : MonoBehaviour
 {
     public CanvasGroup panelGroup;
     public RectTransform panelRect;
-    public Text priceText;
     public Text statusText;
-    public Button buyButton;
     public BonusManager bonusManager;
 
     private void Awake()
@@ -38,7 +36,6 @@ public class ShopUI : MonoBehaviour
 
     public void Show()
     {
-        UpdatePrice();
         if (statusText != null)
             statusText.text = "";
 
@@ -58,21 +55,8 @@ public class ShopUI : MonoBehaviour
         });
     }
 
-    public void OnBuyPressed()
-    {
-        if (buyButton != null)
-            buyButton.interactable = false;
-        if (statusText != null)
-            statusText.text = "Processing...";
-
-        if (IAPManager.Instance != null)
-            IAPManager.Instance.BuyBonusPack();
-    }
-
     private void OnPurchaseSuccess()
     {
-        if (buyButton != null)
-            buyButton.interactable = true;
         if (statusText != null)
         {
             statusText.color = new Color(0.25f, 0.82f, 0.50f, 1f);
@@ -99,18 +83,10 @@ public class ShopUI : MonoBehaviour
 
     private void OnPurchaseFailed(string reason)
     {
-        if (buyButton != null)
-            buyButton.interactable = true;
         if (statusText != null)
         {
             statusText.color = new Color(0.90f, 0.22f, 0.35f, 1f);
             statusText.text = "Purchase failed";
         }
-    }
-
-    private void UpdatePrice()
-    {
-        if (priceText != null && IAPManager.Instance != null)
-            priceText.text = IAPManager.Instance.GetLocalizedPrice();
     }
 }
