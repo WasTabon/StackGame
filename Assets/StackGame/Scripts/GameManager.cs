@@ -46,6 +46,15 @@ public class GameManager : MonoBehaviour
         {
             if (endlessManager != null)
                 endlessManager.StartEndless();
+
+            if (levelManager != null)
+            {
+                if (levelManager.goalPanel != null)
+                    levelManager.goalPanel.gameObject.SetActive(false);
+                if (levelManager.progressText != null)
+                    levelManager.progressText.gameObject.SetActive(false);
+            }
+
             tower.SpawnInitialLayers();
         }
 
