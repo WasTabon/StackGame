@@ -2138,13 +2138,13 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 559830897}
-        m_TargetAssemblyTypeName: ShopUI, Assembly-CSharp
+      - m_Target: {fileID: 923464185}
+        m_TargetAssemblyTypeName: IAPManager, Assembly-CSharp
         m_MethodName: Hide
-        m_Mode: 0
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -2305,7 +2305,6 @@ MonoBehaviour:
   levelsCanvasGroup: {fileID: 1429796490}
   endlessCanvasGroup: {fileID: 968469526}
   levelSelectUI: {fileID: 173449244}
-  shopUI: {fileID: 559830897}
   highScoreText: {fileID: 860468098}
 --- !u!114 &777140773
 MonoBehaviour:
@@ -2717,8 +2716,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f6440c0762aca941b738eaa3343e052, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  panel: {fileID: 1823541781}
   productId: com.swap.inapp
+  panelGroup: {fileID: 559830898}
+  panelRect: {fileID: 559830901}
+  priceText: {fileID: 665545145}
+  statusText: {fileID: 763827149}
 --- !u!4 &923464186
 Transform:
   m_ObjectHideFlags: 0
@@ -3854,17 +3856,17 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 777140772}
-        m_TargetAssemblyTypeName: MainMenuUI, Assembly-CSharp
-        m_MethodName: OnShopPressed
-        m_Mode: 0
+      - m_Target: {fileID: 923464185}
+        m_TargetAssemblyTypeName: IAPManager, Assembly-CSharp
+        m_MethodName: Show
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
-          m_BoolArgument: 0
+          m_BoolArgument: 1
         m_CallState: 2
 --- !u!114 &1264145646
 MonoBehaviour:

@@ -10,7 +10,6 @@ public class MainMenuUI : MonoBehaviour
     public CanvasGroup levelsCanvasGroup;
     public CanvasGroup endlessCanvasGroup;
     public LevelSelectUI levelSelectUI;
-    public ShopUI shopUI;
     public Text highScoreText;
 
     private void Start()
@@ -56,11 +55,5 @@ public class MainMenuUI : MonoBehaviour
     {
         Debug.Assert(SceneLoader.Instance != null, "SceneLoader not found!");
         SceneLoader.Instance.LoadGameplay(SceneLoader.GameMode.Endless);
-    }
-
-    public void OnShopPressed()
-    {
-        if (shopUI != null)
-            shopUI.Show();
     }
 }
